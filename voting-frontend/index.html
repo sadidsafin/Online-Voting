@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bangladesh General Election — Online Voting System</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Barlow:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #c8102e;
+  --green: #006a4e;
+  --green-dark: #004d38;
+  --gold: #d4a843;
+  --cream: #f5f0e8;
+  --ink: #1a1209;
+  --muted: #6b5e4e;
+  --white: #ffffff;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--ink);
+  color: var(--cream);
+  overflow-x: hidden;
+}
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 40px 24px;
+}
+
+/* Flag background */
+.flag-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.flag-canvas {
+  width: 100%;
+  height: 100%;
+  opacity: 0.18;
+}
+
+/* Dark overlay */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(26,18,9,0.55) 0%,
+    rgba(26,18,9,0.3) 40%,
+    rgba(26,18,9,0.75) 100%
+  );
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 860px;
+}
+
+.emblem {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: emblemIn 0.8s cubic-bezier(0.34,1.56,0.64,1) both 0.2s;
+  filter: drop-shadow(0 4px 24px rgba(200,16,46,0.4));
+}
+
+@keyframes emblemIn {
+  from { opacity:0; transform:scale(0.5) rotate(-10deg); }
+  to   { opacity:1; transform:scale(1) rotate(0); }
+}
+
+.hero-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+  animation: fadeUp 0.6s ease both 0.4s;
+}
+
+.hero-title {
+  font-family: 'Libre Baskerville', serif;
+  font-size: clamp(36px, 6vw, 72px);
+  line-height: 1.1;
+  color: var(--white);
+  margin-bottom: 12px;
+  animation: fadeUp 0.6s ease both 0.5s;
+}
+
+.hero-title span { color: var(--red); }
+
+.hero-sub {
+  font-size: clamp(14px, 2vw, 18px);
+  color: rgba(245,240,232,0.75);
+  margin-bottom: 48px;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  animation: fadeUp 0.6s ease both 0.6s;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── CTA BUTTONS ── */
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  animation: fadeUp 0.6s ease both 0.75s;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 32px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-vote {
+  background: var(--red);
+  color: white;
+  box-shadow: 0 4px 24px rgba(200,16,46,0.4);
+}
+.btn-vote:hover { box-shadow: 0 8px 32px rgba(200,16,46,0.6); transform: translateY(-2px); }
+
+.btn-candidates {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(8px);
+}
+.btn-candidates:hover { background: rgba(255,255,255,0.18); transform: translateY(-2px); }
+
+.btn-results {
+  background: var(--green);
+  color: white;
+  box-shadow: 0 4px 24px rgba(0,106,78,0.4);
+}
+.btn-results:hover { box-shadow: 0 8px 32px rgba(0,106,78,0.6); transform: translateY(-2px); }
+
+.scroll-hint {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  animation: fadeUp 0.6s ease both 1s;
+}
+
+.scroll-arrow {
+  width: 20px; height: 20px;
+  border-right: 2px solid rgba(255,255,255,0.3);
+  border-bottom: 2px solid rgba(255,255,255,0.3);
+  transform: rotate(45deg);
+  animation: bounce 1.5s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: rotate(45deg) translateY(0); }
+  50% { transform: rotate(45deg) translateY(6px); }
+}
+
+/* ── ABOUT SECTION ── */
+.section {
+  padding: 100px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-family: 'Libre Baskerville', serif;
+  font-size: clamp(28px, 4vw, 48px);
+  color: var(--cream);
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+.section-body {
+  font-size: 16px;
+  line-height: 1.8;
+  color: rgba(245,240,232,0.7);
+  max-width: 680px;
+  font-weight: 300;
+}
+
+.divider-line {
+  width: 60px;
+  height: 3px;
+  background: var(--red);
+  margin: 20px 0 32px;
+}
+
+/* About grid */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-top: 60px;
+}
+
+@media (max-width: 700px) { .about-grid { grid-template-columns: 1fr; } }
+
+.about-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px;
+  padding: 32px;
+  transition: background 0.2s;
+}
+
+.about-card:hover { background: rgba(255,255,255,0.07); }
+
+.about-card-icon { font-size: 32px; margin-bottom: 14px; }
+
+.about-card h3 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 18px;
+  color: var(--cream);
+  margin-bottom: 10px;
+}
+
+.about-card p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(245,240,232,0.6);
+}
+
+/* ── PAST ELECTIONS ── */
+.elections-section {
+  background: rgba(0,106,78,0.08);
+  border-top: 1px solid rgba(0,106,78,0.2);
+  border-bottom: 1px solid rgba(0,106,78,0.2);
+  padding: 100px 24px;
+}
+
+.elections-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.elections-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 40px;
+  font-size: 14px;
+}
+
+.elections-table th {
+  text-align: left;
+  padding: 12px 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-bottom: 1px solid rgba(212,168,67,0.3);
+}
+
+.elections-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: rgba(245,240,232,0.75);
+  vertical-align: top;
+}
+
+.elections-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+.election-year {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 20px;
+  color: var(--cream);
+  font-weight: 700;
+}
+
+.winner-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-bnp  { background: rgba(200,16,46,0.15); color: #ff6b7a; border: 1px solid rgba(200,16,46,0.3); }
+.badge-al   { background: rgba(0,106,78,0.2);   color: #4dca9e; border: 1px solid rgba(0,106,78,0.4); }
+.badge-jatiya { background: rgba(212,168,67,0.15); color: var(--gold); border: 1px solid rgba(212,168,67,0.3); }
+
+/* ── VOTE CTA SECTION ── */
+.cta-section {
+  padding: 120px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(200,16,46,0.12) 0%, transparent 70%);
+}
+
+.cta-section .section-title { text-align: center; }
+.cta-section .section-body  { margin: 0 auto 48px; text-align: center; }
+
+.cta-big-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 56px;
+  background: var(--red);
+  color: white;
+  font-family: 'Barlow', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 8px 40px rgba(200,16,46,0.5);
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+  z-index: 1;
+}
+
+.cta-big-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 50px rgba(200,16,46,0.6); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(245,240,232,0.3);
+  letter-spacing: 0.05em;
+}
+</style>
+
+<!-- ── INDEX PAGE BACKGROUND ── -->
+<style>
+/* Overlay a subtle crowd/election image on the dark hero */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("https://images.unsplash.com/photo-1471107340929-a87cd0f5b5f3?w=1600&q=80&fit=crop");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="flag-bg">
+    <canvas class="flag-canvas" id="flagCanvas"></canvas>
+  </div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <div class="emblem">🇧🇩</div>
+    <p class="hero-label">People's Republic of Bangladesh</p>
+    <h1 class="hero-title">General <span>Election</span><br>2026</h1>
+    <p class="hero-sub">Cast your vote. Shape the future of Bangladesh.<br>A secure, transparent, and fair online voting experience.</p>
+
+    <div class="hero-actions">
+      <a href="#" class="btn btn-vote" onclick="openVoteWindow(event)">
+        🗳️ Cast Your Vote
+      </a>
+      <a href="candidates.html" class="btn btn-candidates">
+        👥 View All Candidates
+      </a>
+      <a href="results.html" class="btn btn-results">
+        📊 Live Results
+      </a>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ── ABOUT ── -->
+<section class="section">
+  <p class="section-tag">About This Election</p>
+  <h2 class="section-title">Bangladesh General Election 2026</h2>
+  <div class="divider-line"></div>
+  <p class="section-body">
+    The Bangladesh General Election 2026 is a landmark democratic exercise involving over 1,100 registered constituencies across the nation. Citizens elect representatives to the Jatiya Sangsad (National Parliament) through a first-past-the-post voting system. This digital platform enables secure, real-time vote submission and transparent result tracking.
+  </p>
+
+  <div class="about-grid">
+    <div class="about-card">
+      <div class="about-card-icon">🏛️</div>
+      <h3>Jatiya Sangsad</h3>
+      <p>The national parliament of Bangladesh consists of 300 directly elected seats. Members serve 5-year terms and are responsible for legislation, budget approval, and government oversight.</p>
+    </div>
+    <div class="about-card">
+      <div class="about-card-icon">🗺️</div>
+      <h3>Constituencies</h3>
+      <p>Bangladesh is divided into 300 constituencies across 8 administrative divisions — Dhaka, Chittagong, Rajshahi, Khulna, Barisal, Sylhet, Rangpur, and Mymensingh.</p>
+    </div>
+    <div class="about-card">
+      <div class="about-card-icon">⚖️</div>
+      <h3>Voting System</h3>
+      <p>Bangladesh uses a first-past-the-post (FPTP) system. Each voter casts one vote for a candidate in their constituency, and the candidate with the most votes wins the seat.</p>
+    </div>
+    <div class="about-card">
+      <div class="about-card-icon">🔒</div>
+      <h3>Secure & Transparent</h3>
+      <p>This system uses voter ID verification, one-vote-per-voter enforcement, and real-time result tracking to ensure integrity and public confidence in the democratic process.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── PAST ELECTIONS ── -->
+<div class="elections-section">
+  <div class="elections-inner">
+    <p class="section-tag">Electoral History</p>
+    <h2 class="section-title">Past General Elections</h2>
+    <div class="divider-line"></div>
+    <p class="section-body">A look at Bangladesh's democratic journey since independence — from early post-liberation elections to the modern era of mass participation.</p>
+
+    <table class="elections-table">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Winning Party</th>
+          <th>Seats Won</th>
+          <th>Voter Turnout</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div class="election-year">2024</div></td>
+          <td><span class="winner-badge badge-al">Awami League</span></td>
+          <td>257 / 300</td>
+          <td>80%</td>
+          <td>BNP boycotted the election and Sheikh Hasina's fifth term as Prime Minister.</td>
+        </tr>
+        <tr>
+          <td><div class="election-year">2018</div></td>
+          <td><span class="winner-badge badge-al">Awami League</span></td>
+          <td>259 / 300</td>
+          <td>80%</td>
+          <td>Sheikh Hasina's fourth term as Prime Minister.</td>
+        </tr>
+        <tr>
+          <td><div class="election-year">2014</div></td>
+          <td><span class="winner-badge badge-al">Awami League</span></td>
+          <td>234 / 300</td>
+          <td>40%</td>
+          <td>BNP boycotted the election; low turnout controversy.</td>
+        </tr>
+        <tr>
+          <td><div class="election-year">2008</div></td>
+          <td><span class="winner-badge badge-al">Awami League</span></td>
+          <td>230 / 300</td>
+          <td>87%</td>
+          <td>Record turnout after two years of military-backed caretaker government.</td>
+        </tr>
+        <tr>
+          <td><div class="election-year">2001</div></td>
+          <td><span class="winner-badge badge-bnp">BNP Alliance</span></td>
+          <td>193 / 300</td>
+          <td>75%</td>
+          <td>Khaleda Zia's second term; BNP-Jamaat coalition victory.</td>
+        </tr>
+        <tr>
+          <td><div class="election-year">1996</div></td>
+          <td><span class="winner-badge badge-al">Awami League</span></td>
+          <td>146 / 300</td>
+          <td>75%</td>
+          <td>Sheikh Hasina's first term after 21 years of AL opposition.</td>
+        </tr>
+        <tr>
+          <td><div class="election-year">1991</div></td>
+          <td><span class="winner-badge badge-bnp">BNP</span></td>
+          <td>140 / 300</td>
+          <td>55%</td>
+          <td>First election after fall of Ershad's regime; return to democracy.</td>
+        </tr>
+        <tr>
+          <td><div class="election-year">1986</div></td>
+          <td><span class="winner-badge badge-jatiya">Jatiya Party</span></td>
+          <td>153 / 300</td>
+          <td>61%</td>
+          <td>Election held under General Ershad's government.</td>
+        </tr>
+        <tr>
+          <td><div class="election-year">1973</div></td>
+          <td><span class="winner-badge badge-al">Awami League</span></td>
+          <td>293 / 300</td>
+          <td>55%</td>
+          <td>First general election after Bangladesh's independence in 1971.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── VOTE CTA ── -->
+<section class="cta-section">
+  <p class="section-tag">Your Voice Matters</p>
+  <h2 class="section-title">Ready to Vote?</h2>
+  <div class="divider-line" style="margin:20px auto 32px;"></div>
+  <p class="section-body">
+    Voting is your fundamental democratic right. Enter your Voter ID to access the ballot for your constituency and cast your vote in a few simple steps.
+  </p>
+  <a href="#" class="cta-big-btn" onclick="openVoteWindow(event)">
+    🗳️ &nbsp; Cast Your Vote Now
+  </a>
+</section>
+
+<footer>
+  <p>Bangladesh General Election 2026 &nbsp;·&nbsp; CSE299 Project — Group 5 &nbsp;·&nbsp; North South University</p>
+  <p style="margin-top:8px;">This is a prototype system for academic demonstration purposes only.</p>
+</footer>
+
+<script>
+// ── WAVING FLAG ON CANVAS ────────────────────────────────
+const canvas = document.getElementById('flagCanvas');
+const ctx    = canvas.getContext('2d');
+
+function resize() {
+  canvas.width  = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+let t = 0;
+
+function drawFlag() {
+  const W = canvas.width;
+  const H = canvas.height;
+  const cols = 80;
+  const rows = 50;
+  const cw = W / cols;
+  const ch = H / rows;
+
+  ctx.clearRect(0, 0, W, H);
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const fx = col / cols;
+      const fy = row / rows;
+
+      // Wave distortion
+      const waveX = Math.sin(fx * 4 + t) * 0.04;
+      const waveY = Math.sin(fy * 3 + t * 0.7) * 0.02;
+      const light = 0.7 + Math.sin(fx * 5 + t + fy * 2) * 0.3;
+
+      // Flag colors: green background, red circle
+      const cx = 0.35, cy = 0.5, r = 0.18;
+      const dx = fx + waveX - cx;
+      const dy = fy + waveY - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+
+      let r_col, g_col, b_col;
+      if (dist < r) {
+        // Red circle
+        r_col = Math.round(200 * light);
+        g_col = Math.round(16  * light);
+        b_col = Math.round(46  * light);
+      } else {
+        // Green background
+        r_col = Math.round(0   * light);
+        g_col = Math.round(106 * light);
+        b_col = Math.round(78  * light);
+      }
+
+      ctx.fillStyle = `rgb(${r_col},${g_col},${b_col})`;
+      ctx.fillRect(col * cw, row * ch, cw + 1, ch + 1);
+    }
+  }
+
+  t += 0.04;
+  requestAnimationFrame(drawFlag);
+}
+
+drawFlag();
+
+// ── OPEN VOTE WINDOW ────────────────────────────────────
+function openVoteWindow(e) {
+  e.preventDefault();
+  const w = 2000, h = 2800;
+  const left = (screen.width  - w) / 2;
+  const top  = (screen.height - h) / 2;
+  window.open(
+    'login.html',
+    'VoteWindow',
+    `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`
+  );
+}
+</script>
+</body>
+</html>

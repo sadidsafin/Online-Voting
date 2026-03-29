@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Election Results — Online Voting System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d1b2a;
+    --blue: #1b4f8a;
+    --blue-light: #2563b8;
+    --gold: #c9a84c;
+    --cream: #f7f4ef;
+    --surface: #ffffff;
+    --border: #ddd8ce;
+    --muted: #7a7265;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(27,79,138,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 85% 90%, rgba(201,168,76,0.05) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    left: 48px; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--blue) 30%, var(--blue) 70%, transparent);
+    opacity: 0.1;
+  }
+
+  header {
+    width: 100%;
+    max-width: 620px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    animation: fadeDown 0.4s ease both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--blue);
+  }
+
+  .refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 6px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .refresh-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+  .refresh-icon { font-size: 14px; transition: transform 0.4s; }
+  .refresh-btn.spinning .refresh-icon { animation: spin 0.6s linear; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    width: 100%;
+    max-width: 620px;
+    box-shadow: 0 8px 40px rgba(13,27,42,0.09);
+    overflow: hidden;
+    animation: cardUp 0.45s ease both 0.1s;
+    position: relative;
+  }
+
+  @keyframes cardUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--blue), var(--gold), var(--blue));
+  }
+
+  .card-header {
+    padding: 32px 44px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .card-header-left p {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+
+  .card-header-left h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    color: var(--ink);
+  }
+
+  .total-pill {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .total-pill strong {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    display: block;
+    line-height: 1.1;
+  }
+
+  .card-body { padding: 32px 44px 40px; }
+
+  /* ── LOADING ── */
+  #loading-state {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spinA 0.8s linear infinite;
+    margin: 0 auto 14px;
+  }
+
+  @keyframes spinA { to { transform: rotate(360deg); } }
+
+  /* ── RESULTS ── */
+  #results-section { display: none; }
+
+  .result-row {
+    margin-bottom: 22px;
+    animation: rowIn 0.4s ease both;
+  }
+
+  .result-row:nth-child(1) { animation-delay: 0.05s; }
+  .result-row:nth-child(2) { animation-delay: 0.12s; }
+  .result-row:nth-child(3) { animation-delay: 0.19s; }
+  .result-row:nth-child(4) { animation-delay: 0.26s; }
+  .result-row:nth-child(5) { animation-delay: 0.33s; }
+
+  @keyframes rowIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .result-row:last-child { margin-bottom: 0; }
+
+  .row-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .row-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .row-name .party {
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 12px;
+    margin-left: 6px;
+  }
+
+  .row-stat {
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .row-stat strong {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-right: 4px;
+  }
+
+  .bar-track {
+    height: 10px;
+    background: #ede9e3;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* First place gets a special gold shimmer */
+  .result-row.first-place .bar-fill {
+    background: linear-gradient(90deg, var(--blue), #2e86de);
+    box-shadow: 0 0 8px rgba(27,79,138,0.3);
+  }
+
+  .result-row:not(.first-place) .bar-fill {
+    background: #93b4d8;
+  }
+
+  .winner-badge {
+    display: inline-block;
+    background: #fef9ee;
+    border: 1px solid #f3d68a;
+    color: #92700b;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 99px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
+  /* ── EMPTY STATE ── */
+  #empty-state {
+    display: none;
+    text-align: center;
+    padding: 48px 0;
+    color: var(--muted);
+  }
+
+  #empty-state .empty-icon { font-size: 36px; margin-bottom: 14px; }
+  #empty-state p { font-size: 14px; }
+  #empty-state a { color: var(--blue); text-decoration: none; font-weight: 500; }
+
+  /* ── REGION SECTION ── */
+  .region-toggle {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .toggle-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .toggle-arrow {
+    font-size: 12px;
+    color: var(--muted);
+    transition: transform 0.3s;
+  }
+
+  .toggle-arrow.open { transform: rotate(180deg); }
+
+  #region-body { display: none; margin-top: 18px; }
+
+  .region-group { margin-bottom: 18px; }
+
+  .region-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .region-name::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .region-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 4px 0;
+    color: var(--ink);
+    border-bottom: 1px dashed #ede9e3;
+  }
+
+  .region-row:last-child { border-bottom: none; }
+  .region-row .votes { color: var(--muted); }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 28px;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .back-link:hover { color: var(--blue); }
+</style>
+
+<!-- ── RESULTS PAGE BACKGROUND: Jatiyo Sangshad Bhaban (inline SVG, works offline) ── -->
+<style>
+body { position: relative; }
+
+/* Soft gradient tint overlays — green lawns at bottom, golden sky at top */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(to bottom,
+      rgba(201,168,76,0.04) 0%,
+      transparent 35%,
+      transparent 65%,
+      rgba(0,106,78,0.06) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* SVG background wrapper — fixed, full-screen, behind everything */
+.sangshad-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+.sangshad-bg svg {
+  width: 100%;
+  min-width: 900px;
+  height: auto;
+  opacity: 0.13;
+}
+
+header, .results-container, .card,
+.back-link-wrap, body > * { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<!-- Jatiyo Sangshad Bhaban — illustrated inline SVG, no internet required -->
+<div class="sangshad-bg" aria-hidden="true">
+  <svg viewBox="0 0 1200 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet">
+    <defs>
+      <!-- Sky gradient -->
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#b8cfe8"/>
+        <stop offset="100%" stop-color="#ddeaf6"/>
+      </linearGradient>
+      <!-- Ground/lawn gradient -->
+      <linearGradient id="lawn" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#4a7c59"/>
+        <stop offset="100%" stop-color="#2d5a3a"/>
+      </linearGradient>
+      <!-- Concrete colour for the building -->
+      <linearGradient id="conc" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#c8b89a"/>
+        <stop offset="100%" stop-color="#a89070"/>
+      </linearGradient>
+      <!-- Reflection water -->
+      <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#7aafc8" stop-opacity="0.7"/>
+        <stop offset="100%" stop-color="#4a7fa0" stop-opacity="0.5"/>
+      </linearGradient>
+      <!-- Shadow -->
+      <linearGradient id="shadow" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#706050" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#706050" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+
+    <!-- ── SKY ── -->
+    <rect x="0" y="0" width="1200" height="420" fill="url(#sky)"/>
+    <!-- Faint clouds -->
+    <ellipse cx="200" cy="80"  rx="110" ry="28" fill="white" opacity="0.35"/>
+    <ellipse cx="280" cy="68"  rx="70"  ry="22" fill="white" opacity="0.25"/>
+    <ellipse cx="900" cy="100" rx="130" ry="30" fill="white" opacity="0.3"/>
+    <ellipse cx="980" cy="88"  rx="80"  ry="20" fill="white" opacity="0.2"/>
+    <ellipse cx="550" cy="55"  rx="90"  ry="20" fill="white" opacity="0.2"/>
+
+    <!-- ── LAWN ── -->
+    <rect x="0" y="400" width="1200" height="120" fill="url(#lawn)"/>
+
+    <!-- ── REFLECTING POOL ── -->
+    <ellipse cx="600" cy="415" rx="280" ry="18" fill="url(#water)"/>
+    <!-- Pool glints -->
+    <line x1="480" y1="412" x2="530" y2="412" stroke="white" stroke-width="1" opacity="0.4"/>
+    <line x1="640" y1="415" x2="700" y2="415" stroke="white" stroke-width="1" opacity="0.3"/>
+
+    <!-- ════════════════════════════════
+         JATIYO SANGSHAD BHABAN
+         Louis Kahn's iconic design:
+         - Central square tower ~9 floors
+         - 4 satellite prayer/service halls around it
+         - Giant circular & triangular cutouts
+         - Broad plinth/podium at base
+         ════════════════════════════════ -->
+
+    <!-- PODIUM / BASE PLINTH -->
+    <rect x="300" y="365" width="600" height="48" rx="2" fill="url(#conc)"/>
+    <rect x="310" y="370" width="580" height="38" rx="1" fill="#c0a888" opacity="0.4"/>
+
+    <!-- ── LEFT SATELLITE WING ── -->
+    <!-- Left outer block -->
+    <rect x="312" y="230" width="110" height="140" rx="2" fill="url(#conc)"/>
+    <!-- Left circular cutout (Louis Kahn's signature) -->
+    <circle cx="367" cy="285" r="38" fill="url(#sky)" opacity="0.9"/>
+    <!-- Left small triangular top cutout -->
+    <polygon points="335,230 399,230 367,200" fill="url(#sky)" opacity="0.9"/>
+    <!-- Left wing shadow/depth lines -->
+    <rect x="312" y="230" width="6"  height="140" fill="#80634a" opacity="0.3"/>
+    <rect x="416" y="230" width="6"  height="140" fill="#80634a" opacity="0.2"/>
+
+    <!-- ── RIGHT SATELLITE WING ── -->
+    <rect x="778" y="230" width="110" height="140" rx="2" fill="url(#conc)"/>
+    <circle cx="833" cy="285" r="38" fill="url(#sky)" opacity="0.9"/>
+    <polygon points="801,230 865,230 833,200" fill="url(#sky)" opacity="0.9"/>
+    <rect x="778" y="230" width="6"  height="140" fill="#80634a" opacity="0.3"/>
+    <rect x="882" y="230" width="6"  height="140" fill="#80634a" opacity="0.2"/>
+
+    <!-- ── LEFT-CENTRE SATELLITE ── -->
+    <rect x="440" y="255" width="100" height="115" rx="2" fill="#cbb99c"/>
+    <circle cx="490" cy="305" r="32" fill="url(#sky)" opacity="0.88"/>
+    <polygon points="458,255 522,255 490,228" fill="url(#sky)" opacity="0.88"/>
+    <rect x="440" y="255" width="5" height="115" fill="#80634a" opacity="0.25"/>
+
+    <!-- ── RIGHT-CENTRE SATELLITE ── -->
+    <rect x="660" y="255" width="100" height="115" rx="2" fill="#cbb99c"/>
+    <circle cx="710" cy="305" r="32" fill="url(#sky)" opacity="0.88"/>
+    <polygon points="678,255 742,255 710,228" fill="url(#sky)" opacity="0.88"/>
+    <rect x="655" y="255" width="5" height="115" fill="#80634a" opacity="0.25"/>
+
+    <!-- ── CENTRAL MAIN TOWER ── -->
+    <!-- Tower body -->
+    <rect x="490" y="110" width="220" height="260" rx="2" fill="#d4bc9e"/>
+    <!-- Tower horizontal band articulations (floor lines) -->
+    <rect x="490" y="155" width="220" height="4"  fill="#b09070" opacity="0.5"/>
+    <rect x="490" y="200" width="220" height="4"  fill="#b09070" opacity="0.5"/>
+    <rect x="490" y="245" width="220" height="4"  fill="#b09070" opacity="0.5"/>
+    <rect x="490" y="290" width="220" height="4"  fill="#b09070" opacity="0.5"/>
+    <rect x="490" y="330" width="220" height="4"  fill="#b09070" opacity="0.5"/>
+    <!-- Large central circular opening (most iconic feature) -->
+    <circle cx="600" cy="220" r="72" fill="url(#sky)" opacity="0.92"/>
+    <!-- Inner circle ring detail -->
+    <circle cx="600" cy="220" r="72" fill="none" stroke="#b09070" stroke-width="3" opacity="0.5"/>
+    <!-- Square cutouts flanking the circle -->
+    <rect x="492" y="185" width="46" height="70" rx="1" fill="url(#sky)" opacity="0.88"/>
+    <rect x="662" y="185" width="46" height="70" rx="1" fill="url(#sky)" opacity="0.88"/>
+    <!-- Lower arched window slots -->
+    <rect x="530" y="302" width="30" height="50" rx="15 15 0 0" fill="url(#sky)" opacity="0.85"/>
+    <rect x="570" y="302" width="30" height="50" rx="15 15 0 0" fill="url(#sky)" opacity="0.85"/>
+    <rect x="610" y="302" width="30" height="50" rx="15 15 0 0" fill="url(#sky)" opacity="0.85"/>
+    <rect x="650" y="302" width="30" height="50" rx="15 15 0 0" fill="url(#sky)" opacity="0.85"/>
+    <!-- Triangular top pediment -->
+    <polygon points="490,110 710,110 600,58" fill="#cdb99a"/>
+    <polygon points="490,110 710,110 600,58" fill="none" stroke="#b09070" stroke-width="2" opacity="0.4"/>
+    <!-- Tower vertical edge shadows -->
+    <rect x="490" y="58"  width="8"  height="312" fill="#80634a" opacity="0.2"/>
+    <rect x="702" y="58"  width="8"  height="312" fill="#80634a" opacity="0.15"/>
+
+    <!-- ── LOWER CONNECTING COLONNADES ── -->
+    <!-- Left colonnade (connects left wing to central tower) -->
+    <rect x="418" y="330" width="74" height="40" rx="1" fill="#c8b090"/>
+    <!-- Colonnade columns -->
+    <rect x="424" y="330" width="8" height="40" fill="#b09070" opacity="0.4"/>
+    <rect x="438" y="330" width="8" height="40" fill="#b09070" opacity="0.4"/>
+    <rect x="452" y="330" width="8" height="40" fill="#b09070" opacity="0.4"/>
+    <rect x="466" y="330" width="8" height="40" fill="#b09070" opacity="0.4"/>
+    <!-- Right colonnade -->
+    <rect x="710" y="330" width="74" height="40" rx="1" fill="#c8b090"/>
+    <rect x="716" y="330" width="8" height="40" fill="#b09070" opacity="0.4"/>
+    <rect x="730" y="330" width="8" height="40" fill="#b09070" opacity="0.4"/>
+    <rect x="744" y="330" width="8" height="40" fill="#b09070" opacity="0.4"/>
+    <rect x="758" y="330" width="8" height="40" fill="#b09070" opacity="0.4"/>
+
+    <!-- ── BUILDING SHADOW ON LAWN ── -->
+    <ellipse cx="600" cy="405" rx="320" ry="18" fill="url(#shadow)"/>
+
+    <!-- ── FOREGROUND LAWN TEXTURE ── -->
+    <rect x="0" y="410" width="1200" height="110" fill="#3d6b48" opacity="0.4"/>
+
+    <!-- Trees flanking (low silhouettes) -->
+    <ellipse cx="160" cy="370" rx="55" ry="45" fill="#2a5c34"/>
+    <ellipse cx="180" cy="390" rx="40" ry="28" fill="#2a5c34"/>
+    <rect x="178" y="380" width="8"  height="40" fill="#1a3a22"/>
+    <ellipse cx="1040" cy="370" rx="55" ry="45" fill="#2a5c34"/>
+    <ellipse cx="1060" cy="390" rx="40" ry="28" fill="#2a5c34"/>
+    <rect    cx="1058" cy="380" width="8" height="40" fill="#1a3a22"/>
+
+    <!-- Small trees mid-ground -->
+    <ellipse cx="380" cy="388" rx="28" ry="22" fill="#2e6438"/>
+    <rect x="378" y="390" width="5" height="25" fill="#1a3a22"/>
+    <ellipse cx="820" cy="388" rx="28" ry="22" fill="#2e6438"/>
+    <rect x="818" y="390" width="5" height="25" fill="#1a3a22"/>
+
+    <!-- Building reflection in pool (subtle) -->
+    <rect  x="530" y="414" width="140" height="18" rx="2" fill="#c8b090" opacity="0.18"/>
+    <ellipse cx="600" cy="422" rx="40" ry="6"   fill="#c8b090" opacity="0.12"/>
+  </svg>
+</div>
+
+<header>
+  <div class="brand">🗳️ Online Voting System</div>
+  <button class="refresh-btn" onclick="refresh()" id="refresh-btn">
+    <span class="refresh-icon">↻</span> Refresh
+  </button>
+</header>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <p>Live Tally</p>
+      <h1>Election Results</h1>
+    </div>
+    <div class="total-pill">
+      <strong id="total-count">—</strong>
+      total votes
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div id="loading-state">
+      <div class="spinner"></div>
+      Fetching results…
+    </div>
+
+    <div id="empty-state">
+      <div class="empty-icon">📭</div>
+      <p>No votes have been cast yet.<br>
+      <a href="login.html">Be the first to vote →</a></p>
+    </div>
+
+    <div id="results-section">
+      <div id="result-bars"></div>
+
+      <!-- Region breakdown (collapsible) -->
+      <div class="region-toggle" id="region-toggle" style="display:none">
+        <div class="toggle-header" onclick="toggleRegion()">
+          <span class="toggle-label">Region Breakdown</span>
+          <span class="toggle-arrow" id="toggle-arrow">▼</span>
+        </div>
+        <div id="region-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<a href="login.html" class="back-link">← Back to voting</a>
+
+<script>
+  const API_BASE = 'http://127.0.0.1:8000';
+
+  let regionOpen = false;
+
+  function toggleRegion() {
+    regionOpen = !regionOpen;
+    document.getElementById('region-body').style.display = regionOpen ? 'block' : 'none';
+    document.getElementById('toggle-arrow').classList.toggle('open', regionOpen);
+  }
+
+  async function loadResults() {
+    try {
+      const [simpleRes, regionRes] = await Promise.all([
+        fetch(`${API_BASE}/api/simple-results/`),
+        fetch(`${API_BASE}/api/region-results/`)
+      ]);
+
+      const simple = await simpleRes.json();
+      const region = await regionRes.json();
+
+      const total = simple.reduce((s, r) => s + r.votes, 0);
+      document.getElementById('total-count').textContent = total.toLocaleString();
+
+      document.getElementById('loading-state').style.display = 'none';
+
+      if (total === 0) {
+        document.getElementById('empty-state').style.display = 'block';
+        return;
+      }
+
+      // Sort descending
+      simple.sort((a, b) => b.votes - a.votes);
+
+      const bars = document.getElementById('result-bars');
+      bars.innerHTML = '';
+
+      simple.forEach((r, i) => {
+        const pct = total > 0 ? (r.votes / total * 100).toFixed(1) : 0;
+        const isFirst = i === 0;
+        const div = document.createElement('div');
+        div.className = 'result-row' + (isFirst ? ' first-place' : '');
+        div.innerHTML = `
+          <div class="row-meta">
+            <div class="row-name">
+              ${r.candidate}
+              ${isFirst ? '<span class="winner-badge">Leading</span>' : ''}
+            </div>
+            <div class="row-stat"><strong>${r.votes}</strong>${pct}%</div>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" data-pct="${pct}"></div>
+          </div>
+        `;
+        bars.appendChild(div);
+      });
+
+      document.getElementById('results-section').style.display = 'block';
+
+      // Animate bars after render
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.querySelectorAll('.bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.pct + '%';
+        });
+      }));
+
+      // Build region breakdown
+      if (region.length > 0) {
+        const grouped = {};
+        region.forEach(r => {
+          const reg = r.region__name;
+          if (!grouped[reg]) grouped[reg] = [];
+          grouped[reg].push({ candidate: r.candidate__name, votes: r.total });
+        });
+
+        const regionBody = document.getElementById('region-body');
+        regionBody.innerHTML = '';
+
+        Object.entries(grouped).forEach(([regName, rows]) => {
+          rows.sort((a, b) => b.votes - a.votes);
+          const group = document.createElement('div');
+          group.className = 'region-group';
+          group.innerHTML = `
+            <div class="region-name">${regName}</div>
+            ${rows.map(r => `
+              <div class="region-row">
+                <span>${r.candidate}</span>
+                <span class="votes">${r.votes} votes</span>
+              </div>
+            `).join('')}
+          `;
+          regionBody.appendChild(group);
+        });
+
+        document.getElementById('region-toggle').style.display = 'block';
+      }
+
+    } catch (err) {
+      document.getElementById('loading-state').innerHTML =
+        '<p style="color:#b91c1c; font-size:14px">Could not reach the server. Is Django running?</p>';
+    }
+  }
+
+  async function refresh() {
+    const btn = document.getElementById('refresh-btn');
+    btn.classList.add('spinning');
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('loading-state').style.display = 'block';
+    document.getElementById('region-toggle').style.display = 'none';
+    document.getElementById('total-count').textContent = '—';
+    await loadResults();
+    setTimeout(() => btn.classList.remove('spinning'), 600);
+  }
+
+  loadResults();
+</script>
+</body>
+</html>

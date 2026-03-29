@@ -4,14 +4,15 @@ class Region(models.Model):
     name = models.CharField(max_length=100)
 
     def __str__(self):
-         return self.name
-
+        return self.name
 
 
 class Candidate(models.Model):
-    name = models.CharField(max_length=100)
-    party = models.CharField(max_length=100)
-    region = models.ForeignKey(Region, on_delete=models.CASCADE)
+    name        = models.CharField(max_length=100)
+    party       = models.CharField(max_length=100)
+    region      = models.ForeignKey(Region, on_delete=models.CASCADE)
+    photo       = models.ImageField(upload_to='candidates/photos/', blank=True, null=True)
+    cover_photo = models.ImageField(upload_to='candidates/covers/', blank=True, null=True)
 
     def __str__(self):
         return self.name

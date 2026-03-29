@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}Cast Your Vote{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Cast Your Vote</h1>
+    <p class="subtitle" id="voter-info">Loading voter info...</p>
+
+    <div id="alert-box" class="alert hidden"></div>
+    <div id="loading">Loading candidates...</div>
+
+    <div id="candidates-section" class="hidden">
+        <div id="candidates-list"></div>
+        <button class="btn btn-success" onclick="submitVote()" id="submit-btn">
+            ✓ Submit Vote
+        </button>
+    </div>
+
+    <div id="success-section" class="hidden" style="text-align:center; padding: 20px 0;">
+        <div style="font-size: 60px; margin-bottom: 16px;">✅</div>
+        <h2 style="color: #276749; margin-bottom: 8px;">Vote Recorded!</h2>
+        <p style="color: #718096; margin-bottom: 24px;">Your vote has been successfully submitted.</p>
+        <a href="/results/" class="btn btn-primary" style="text-decoration:none; display:inline-block; width:auto;">
+            View Results →
+        </a>
+    </div>
+</div>
+
+<style>
+    .candidate-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .candidate-card:hover {
+        border-color: #3182ce;
+        background: #ebf8ff;
+    }
+
+    .candidate-card.selected {
+        border-color: #2b6cb0;
+        background: #ebf8ff;
+        box-shadow: 0 0 0 3px rgba(43, 108, 176, 0.15);
+    }
+
+    .candidate-radio {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #cbd5e0;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.2s;
+    }
+
+    .candidate-card.selected .candidate-radio {
+        border-color: #2b6cb0;
+    }
+
+    .candidate-radio-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #2b6cb0;
+        display: none;
+    }
+
+    .candidate-card.selected .candidate-radio-dot {
+        display: block;
+    }
+
+    .candidate-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #2d3748;
+    }
+
+    .candidate-party {
+        font-size: 13px;
+        color: #718096;
+        margin-top: 2px;
+    }
+
+    .candidate-region {
+        font-size: 12px;
+        color: #a0aec0;
+        margin-top: 2px;
+    }
+</style>
+
+<script>
+    let selectedCandidateId = null;
+    const voterId = sessionStorage.getItem('voter_id');
+    const voterRegion = sessionStorage.getItem('voter_region');
+
+    // Redirect to login if no session
+    if (!voterId) {
+        window.location.href = '/';
+    }
+
+    document.getElementById('voter-info').textContent =
+        `Voter ID: ${voterId}  |  Region: ${voterRegion || '...'}`;
+
+    function showAlert(msg, type) {
+        const el = document.getElementById('alert-box');
+        el.textContent = msg;
+        el.className = `alert alert-${type}`;
+        el.classList.remove('hidden');
+    }
+
+    function selectCandidate(id) {
+        selectedCandidateId = id;
+        document.querySelectorAll('.candidate-card').forEach(card => {
+            card.classList.toggle('selected', card.dataset.id == id);
+        });
+    }
+
+    async function loadCandidates() {
+        try {
+            const res = await fetch('/api/candidates/');
+            const candidates = await res.json();
+
+            const list = document.getElementById('candidates-list');
+            list.innerHTML = '';
+
+            if (candidates.length === 0) {
+                list.innerHTML = '<p style="color:#718096">No candidates available.</p>';
+            } else {
+                candidates.forEach(c => {
+                    const card = document.createElement('div');
+                    card.className = 'candidate-card';
+                    card.dataset.id = c.id;
+                    card.onclick = () => selectCandidate(c.id);
+                    card.innerHTML = `
+                        <div class="candidate-radio">
+                            <div class="candidate-radio-dot"></div>
+                        </div>
+                        <div>
+                            <div class="candidate-name">${c.name}</div>
+                            <div class="candidate-party">${c.party}</div>
+                            ${c.region ? `<div class="candidate-region">📍 ${c.region}</div>` : ''}
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            }
+
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('candidates-section').classList.remove('hidden');
+
+        } catch (err) {
+            document.getElementById('loading').textContent = 'Failed to load candidates.';
+        }
+    }
+
+    async function submitVote() {
+        if (!selectedCandidateId) {
+            showAlert('Please select a candidate before submitting.', 'error');
+            return;
+        }
+
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('submit-btn').textContent = 'Submitting...';
+
+        try {
+            const res = await fetch('/api/vote/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    voter_id: parseInt(voterId),
+                    candidate_id: selectedCandidateId
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.message === 'Vote recorded successfully') {
+                sessionStorage.clear();
+                document.getElementById('candidates-section').classList.add('hidden');
+                document.getElementById('success-section').classList.remove('hidden');
+            } else {
+                showAlert(data.message || 'Vote could not be submitted.', 'error');
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('submit-btn').textContent = '✓ Submit Vote';
+            }
+
+        } catch (err) {
+            showAlert('Network error. Please try again.', 'error');
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('submit-btn').textContent = '✓ Submit Vote';
+        }
+    }
+
+    loadCandidates();
+</script>
+{% endblock %}

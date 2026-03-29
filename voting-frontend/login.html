@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voter Login — Bangladesh Election 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #c8102e; --green: #006a4e; --gold: #d4a843;
+  --cream: #f5f0e8; --ink: #1a1209; --muted: #6b5e4e;
+  --surface: #ffffff; --border: #ddd5c8; --error: #b91c1c; --error-bg: #fef2f2;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Barlow', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  background: #0d2b1f;
+}
+
+/* ── BACKGROUND BALLOT SCENE ── */
+.ballot-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Falling ballot papers */
+.paper {
+  position: absolute;
+  background: white;
+  border-radius: 2px;
+  opacity: 0;
+  animation: paperFall linear infinite;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+.paper::before {
+  content: '';
+  display: block;
+  margin: 7px 5px 0;
+  height: 2px;
+  background: #ccc;
+  border-radius: 1px;
+  box-shadow: 0 5px 0 #e5e5e5, 0 10px 0 #ddd, 0 15px 0 #e8e8e8;
+}
+.paper:nth-child(1)  { left:4%;  width:28px; height:36px; animation-duration:6.0s; animation-delay:0.0s; }
+.paper:nth-child(2)  { left:11%; width:34px; height:44px; animation-duration:7.5s; animation-delay:1.2s; }
+.paper:nth-child(3)  { left:20%; width:26px; height:34px; animation-duration:5.5s; animation-delay:0.5s; }
+.paper:nth-child(4)  { left:31%; width:36px; height:46px; animation-duration:8.0s; animation-delay:2.1s; }
+.paper:nth-child(5)  { left:42%; width:30px; height:40px; animation-duration:6.5s; animation-delay:0.8s; }
+.paper:nth-child(6)  { left:53%; width:32px; height:42px; animation-duration:7.2s; animation-delay:1.6s; }
+.paper:nth-child(7)  { left:63%; width:28px; height:36px; animation-duration:5.8s; animation-delay:3.0s; }
+.paper:nth-child(8)  { left:73%; width:34px; height:44px; animation-duration:8.5s; animation-delay:0.3s; }
+.paper:nth-child(9)  { left:82%; width:26px; height:34px; animation-duration:6.2s; animation-delay:1.9s; }
+.paper:nth-child(10) { left:91%; width:30px; height:38px; animation-duration:7.0s; animation-delay:2.7s; }
+.paper:nth-child(11) { left:7%;  width:22px; height:30px; animation-duration:9.0s; animation-delay:4.1s; }
+.paper:nth-child(12) { left:47%; width:24px; height:32px; animation-duration:6.8s; animation-delay:3.5s; }
+
+@keyframes paperFall {
+  0%   { top:-60px;  opacity:0;    transform:rotate(-6deg) scale(0.9); }
+  8%   { opacity:0.55; }
+  90%  { opacity:0.35; }
+  100% { top:110vh;  opacity:0;    transform:rotate(12deg) scale(1.05); }
+}
+
+/* ── BALLOT BOX SVG (bottom centre) ── */
+.bbox-wrap {
+  position: fixed;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+  width: 280px;
+}
+.bbox-wrap svg { width:100%; height:auto; display:block; }
+
+/* Paper sliding into slot */
+.insert-paper {
+  animation: insertPaper 3s ease-in-out infinite;
+  transform-origin: 50% 0;
+}
+@keyframes insertPaper {
+  0%   { transform:translateY(-100px) rotate(-4deg); opacity:0; }
+  12%  { opacity:1; }
+  55%  { transform:translateY(2px) rotate(0deg); opacity:1; }
+  70%  { transform:translateY(16px) rotate(0deg); opacity:0.7; }
+  100% { transform:translateY(16px); opacity:0; }
+}
+
+/* Scene overlay */
+.scene-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(160deg,
+    rgba(13,43,31,0.78) 0%,
+    rgba(13,43,31,0.55) 50%,
+    rgba(13,43,31,0.85) 100%);
+  z-index: 3;
+}
+
+/* ── TOP BAR ── */
+.top-bar {
+  position: fixed;
+  top:0; left:0; right:0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--green), var(--red), var(--green));
+  z-index: 10;
+}
+
+/* ── LOGIN CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 20px 60px rgba(0,0,0,0.45);
+  position: relative;
+  z-index: 6;
+  animation: cardIn 0.5s ease both 0.15s;
+}
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.flag-icon {
+  font-size: 40px;
+  text-align: center;
+  display: block;
+  margin-bottom: 16px;
+  animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both 0.25s;
+}
+@keyframes pop {
+  from { opacity:0; transform:scale(0.5); }
+  to   { opacity:1; transform:scale(1); }
+}
+
+.org {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+
+h1 {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 22px;
+  color: var(--ink);
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.sub {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.rule { height:1px; background:var(--border); margin:20px 0; }
+
+label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 7px;
+}
+
+.input-wrap { position: relative; }
+
+input[type="number"] {
+  width: 100%;
+  padding: 12px 14px 12px 40px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -moz-appearance: textfield;
+}
+input::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button { -webkit-appearance: none; }
+input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(0,106,78,0.1); background:white; }
+input.err   { border-color:var(--error); box-shadow:0 0 0 3px rgba(185,28,28,0.08); }
+
+.icon {
+  position: absolute; left:12px; top:50%;
+  transform: translateY(-50%); font-size:15px; pointer-events:none;
+}
+
+.alert {
+  display:none; margin-top:8px; padding:9px 12px;
+  border-radius:2px; font-size:12px; font-weight:500; line-height:1.4;
+}
+.alert.err { display:block; background:var(--error-bg); color:var(--error); border:1px solid #fecaca; }
+
+button {
+  width:100%; margin-top:18px; padding:14px;
+  background:var(--red); color:white;
+  font-family:'Barlow', sans-serif; font-size:12px; font-weight:700;
+  letter-spacing:0.12em; text-transform:uppercase;
+  border:none; border-radius:2px; cursor:pointer;
+  transition:background 0.2s, transform 0.1s, box-shadow 0.2s;
+  position:relative; overflow:hidden;
+}
+button:hover { background:#a50d25; box-shadow:0 4px 20px rgba(200,16,46,0.3); }
+button:active { transform:scale(0.99); }
+button:disabled { opacity:0.6; pointer-events:none; }
+button.loading::after {
+  content:''; position:absolute; left:0; top:0; right:0; bottom:0;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation:shimmer 1s infinite;
+}
+@keyframes shimmer { from{transform:translateX(-100%)} to{transform:translateX(100%)} }
+
+.note { margin-top:14px; font-size:10px; color:var(--muted); text-align:center; line-height:1.6; }
+
+.scene-label {
+  position:fixed; bottom:12px; left:50%; transform:translateX(-50%);
+  z-index:7; font-size:10px; letter-spacing:0.2em; text-transform:uppercase;
+  color:rgba(255,255,255,0.3); white-space:nowrap;
+}
+</style>
+</head>
+<body>
+
+<!-- ══ BACKGROUND SCENE ══ -->
+<div class="ballot-scene">
+  <div class="paper"></div><div class="paper"></div><div class="paper"></div>
+  <div class="paper"></div><div class="paper"></div><div class="paper"></div>
+  <div class="paper"></div><div class="paper"></div><div class="paper"></div>
+  <div class="paper"></div><div class="paper"></div><div class="paper"></div>
+
+  <!-- Ballot box SVG -->
+  <div class="bbox-wrap">
+    <svg viewBox="0 0 280 230" xmlns="http://www.w3.org/2000/svg">
+      <!-- Animated paper insert -->
+      <g class="insert-paper">
+        <rect x="112" y="48" width="56" height="72" rx="3" fill="white" opacity="0.96"/>
+        <rect x="120" y="58" width="40" height="3"  rx="1.5" fill="#ccc"/>
+        <rect x="120" y="65" width="32" height="3"  rx="1.5" fill="#e0e0e0"/>
+        <rect x="120" y="72" width="36" height="3"  rx="1.5" fill="#ccc"/>
+        <rect x="120" y="79" width="28" height="3"  rx="1.5" fill="#e0e0e0"/>
+        <!-- Checkmark circle -->
+        <circle cx="140" cy="99" r="8" fill="none" stroke="#006a4e" stroke-width="2"/>
+        <polyline points="135,99 139,103 146,93" fill="none" stroke="#006a4e" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+
+      <!-- BOX BODY -->
+      <rect x="44" y="130" width="192" height="94" rx="6" fill="#15342a"/>
+      <rect x="44" y="130" width="192" height="94" rx="6" fill="none" stroke="#1f5040" stroke-width="1.5"/>
+
+      <!-- Inner panel -->
+      <rect x="56" y="140" width="168" height="74" rx="4" fill="#122d24" opacity="0.6"/>
+
+      <!-- Slot opening -->
+      <rect x="108" y="124" width="64" height="13" rx="6.5" fill="#0a1f17"/>
+      <rect x="108" y="124" width="64" height="13" rx="6.5" fill="none" stroke="#1f5040" stroke-width="1.5"/>
+      <rect x="112" y="127" width="56" height="6" rx="3" fill="#061410"/>
+
+      <!-- BALLOT text -->
+      <text x="140" y="176" text-anchor="middle" font-family="Georgia, serif"
+            font-size="10" font-weight="bold" fill="#d4a843" letter-spacing="4">BALLOT</text>
+      <text x="140" y="188" text-anchor="middle" font-family="sans-serif"
+            font-size="7" fill="rgba(255,255,255,0.35)" letter-spacing="2">OFFICIAL VOTING BOX</text>
+
+      <!-- Lock -->
+      <rect x="130" y="196" width="20" height="13" rx="2.5" fill="#1f5040"/>
+      <path d="M133 196 Q133 189 140 189 Q147 189 147 196" fill="none" stroke="#1f5040" stroke-width="2.5"/>
+      <circle cx="140" cy="202" r="2" fill="#d4a843"/>
+
+      <!-- Legs -->
+      <rect x="64"  y="222" width="14" height="8" rx="2" fill="#0f2820"/>
+      <rect x="202" y="222" width="14" height="8" rx="2" fill="#0f2820"/>
+
+      <!-- Side accent stripes -->
+      <rect x="44"  y="130" width="5" height="94" rx="2.5" fill="#006a4e" opacity="0.8"/>
+      <rect x="231" y="130" width="5" height="94" rx="2.5" fill="#c8102e" opacity="0.6"/>
+    </svg>
+  </div>
+</div>
+
+<div class="scene-overlay"></div>
+<div class="top-bar"></div>
+
+<!-- ══ LOGIN CARD ══ -->
+<div class="card">
+  <span class="flag-icon">🇧🇩</span>
+  <p class="org">Bangladesh General Election 2026</p>
+  <h1>Voter Login</h1>
+  <p class="sub">Enter your Voter ID to access<br>the ballot for your constituency.</p>
+
+  <div class="rule"></div>
+
+  <label for="vid">Voter ID Number</label>
+  <div class="input-wrap">
+    <span class="icon">🪪</span>
+    <input type="number" id="vid" placeholder="e.g. 30" min="1" autocomplete="off" />
+  </div>
+  <div class="alert" id="alert"></div>
+
+  <button id="btn" onclick="login()">Access Ballot →</button>
+
+  <p class="note">
+    Each Voter ID may only be used once.<br>
+    Having trouble? Contact your polling officer.
+  </p>
+</div>
+
+<p class="scene-label">Secure · Confidential · Official</p>
+
+<script>
+  const API_BASE = 'http://127.0.0.1:8000';
+  const input   = document.getElementById('vid');
+  const btn     = document.getElementById('btn');
+  const alertEl = document.getElementById('alert');
+
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  input.focus();
+
+  function showErr(msg) {
+    alertEl.textContent = msg;
+    alertEl.className   = 'alert err';
+    input.classList.add('err');
+  }
+  function clearErr() {
+    alertEl.className = 'alert';
+    input.classList.remove('err');
+  }
+
+  async function login() {
+    clearErr();
+    const id = input.value.trim();
+    if (!id) { showErr('Please enter your Voter ID.'); return; }
+
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.textContent = 'Verifying…';
+
+    try {
+      const res  = await fetch(`${API_BASE}/api/verify-voter/?voter_id=${id}`);
+      const data = await res.json();
+
+      if (data.error)     { showErr(data.error); return; }
+      if (data.has_voted) { showErr('This Voter ID has already cast a vote.'); return; }
+
+      sessionStorage.setItem('voter_id',     id);
+      sessionStorage.setItem('voter_region', data.region);
+      window.location.href = 'vote.html';
+
+    } catch (err) {
+      showErr('Cannot reach server. Make sure Django is running.');
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      btn.textContent = 'Access Ballot →';
+    }
+  }
+</script>
+</body>
+</html>
