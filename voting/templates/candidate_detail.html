@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Candidate Profile — Bangladesh Election 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#c8102e; --green:#006a4e; --gold:#e8b84b;
+  --ink:#0d0d0d; --off:#f5f2ec; --muted:#888; --border:rgba(0,0,0,0.08);
+  --pc:#1a3a6b; --pc-dim:rgba(26,58,107,0.10); --pc-glow:rgba(26,58,107,0.28);
+  --radius:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+/* LOADING */
+#loading{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--ink);z-index:999;gap:20px;transition:opacity .5s,visibility .5s}
+#loading.hidden{opacity:0;visibility:hidden}
+.loader-flag{width:52px;height:52px;border-radius:50%;background:conic-gradient(var(--green) 0% 50%,var(--red) 50% 100%);animation:spin 1s linear infinite}
+.loader-text{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.22em;color:rgba(255,255,255,.35);text-transform:uppercase}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#error-state{display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:var(--muted);font-size:15px;text-align:center;padding:40px}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:200;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(13,13,13,.92);backdrop-filter:blur(16px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.06)}
+.nav-brand{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.9);text-decoration:none}
+.nav-brand-flag{width:26px;height:17px;border-radius:2px;background:var(--green);position:relative;overflow:hidden;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.nav-brand-flag::after{content:'';position:absolute;width:9px;height:9px;border-radius:50%;background:var(--red);top:50%;left:50%;transform:translate(-50%,-50%)}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.nav-link{padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;letter-spacing:.04em;text-decoration:none;transition:all .2s;border:1px solid transparent}
+.nl-ghost{color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.12)}
+.nl-ghost:hover{background:rgba(255,255,255,.08);color:white}
+.nl-vote{background:var(--red);color:white;box-shadow:0 0 20px rgba(200,16,46,.4)}
+.nl-vote:hover{background:#e01535;box-shadow:0 0 28px rgba(200,16,46,.6)}
+
+/* HERO */
+.hero{position:relative;height:100vh;min-height:600px;max-height:820px;overflow:hidden;display:flex;align-items:flex-end}
+.hero-geo{position:absolute;inset:0;background:var(--pc);transition:background-color .6s}
+.hero-cover-bg{position:absolute;inset:0;background-size:cover;background-position:center center;background-repeat:no-repeat;opacity:0;transition:opacity .8s}
+.hero-cover-bg.logo-mode{background-size:75% auto;background-position:center center}
+.hero-cover-bg.loaded{opacity:1}
+.hero-img{display:none}
+.hero-vignette{position:absolute;inset:0;background:linear-gradient(to top,rgba(13,13,13,.95) 0%,rgba(13,13,13,.5) 40%,rgba(13,13,13,.15) 70%,transparent 100%),linear-gradient(to right,rgba(13,13,13,.5) 0%,transparent 50%)}
+.hero-ring{position:absolute;right:8%;top:50%;transform:translateY(-50%);width:360px;height:360px;border-radius:50%;border:1px solid rgba(255,255,255,.06);box-shadow:0 0 0 40px rgba(255,255,255,.02),0 0 0 80px rgba(255,255,255,.015),inset 0 0 120px rgba(255,255,255,.03);animation:pulse-ring 4s ease-in-out infinite;pointer-events:none}
+@keyframes pulse-ring{0%,100%{transform:translateY(-50%) scale(1);opacity:.6}50%{transform:translateY(-50%) scale(1.04);opacity:1}}
+.hero-accent{position:absolute;left:0;top:58px;bottom:0;width:5px;background:linear-gradient(to bottom,transparent,var(--pc),var(--gold),transparent)}
+.hero-content{position:relative;z-index:2;width:100%;padding:0 60px 64px;display:flex;flex-direction:column;gap:0}
+.hero-label{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;opacity:0;animation:fadeUp .6s .2s forwards}
+.hero-av-name{display:flex;align-items:center;gap:28px;margin-bottom:20px;opacity:0;animation:fadeUp .6s .35s forwards}
+.hero-avatar{width:100px;height:100px;border-radius:50%;border:3px solid rgba(255,255,255,.2);object-fit:cover;object-position:top center;box-shadow:0 0 0 6px rgba(255,255,255,.06),0 8px 32px rgba(0,0,0,.4);flex-shrink:0;display:block}
+.hero-avatar-letter{width:100px;height:100px;border-radius:50%;border:3px solid rgba(255,255,255,.15);background:var(--pc);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:42px;font-weight:900;color:white;box-shadow:0 0 0 6px rgba(255,255,255,.05),0 8px 32px rgba(0,0,0,.4);flex-shrink:0}
+.hero-name{font-family:'Playfair Display',serif;font-size:clamp(36px,5vw,64px);font-weight:900;line-height:1.05;color:white;letter-spacing:-.02em;text-shadow:0 4px 24px rgba(0,0,0,.4)}
+.hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.hb{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;font-size:12px;font-weight:600;letter-spacing:.04em;backdrop-filter:blur(8px)}
+.hb-party{background:var(--pc);color:white;border:1px solid rgba(255,255,255,.2);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:11px}
+.hb-region{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.15)}
+.hb-votes{background:rgba(232,184,75,.15);color:var(--gold);border:1px solid rgba(232,184,75,.3);font-weight:700}
+.hero-slogan{opacity:0;animation:fadeUp .6s .5s forwards;max-width:600px}
+.hero-slogan-inner{display:flex;align-items:flex-start;gap:16px;padding:18px 24px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;backdrop-filter:blur(12px)}
+.hero-slogan-q{font-size:28px;line-height:1;color:var(--gold);font-family:'Playfair Display',serif;flex-shrink:0;margin-top:-4px}
+.hero-slogan-text{font-family:'Playfair Display',serif;font-style:italic;font-size:17px;line-height:1.55;color:rgba(255,255,255,.88)}
+.hero-scroll{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;opacity:.4;animation:bounce 2s ease-in-out infinite;pointer-events:none}
+.hero-scroll-line{width:1px;height:32px;background:linear-gradient(to bottom,transparent,white)}
+.hero-scroll-dot{width:5px;height:5px;border-radius:50%;background:white}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* BODY */
+.page-body{max-width:1140px;margin:0 auto;padding:60px 40px 100px;display:grid;grid-template-columns:1fr 340px;gap:32px;align-items:start}
+@media(max-width:800px){.page-body{grid-template-columns:1fr;padding:32px 20px 80px}.hero-content{padding:0 28px 48px}.hero-ring{display:none}.hero-avatar,.hero-avatar-letter{width:72px;height:72px;font-size:30px}.hero-av-name{gap:16px}}
+
+/* CARDS */
+.card{background:white;border-radius:var(--radius);border:1px solid var(--border);padding:32px;margin-bottom:24px;box-shadow:0 2px 20px rgba(0,0,0,.04);opacity:0;animation:fadeUp .5s forwards;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--pc),var(--gold));opacity:.7}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.card-icon{width:36px;height:36px;border-radius:8px;background:var(--pc-dim);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;border:1px solid var(--pc-glow)}
+.card-title{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+
+/* BIO */
+.bio-text{font-size:15px;line-height:1.85;color:#2a2a2a;font-weight:400}
+.bio-text::first-letter{font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:var(--pc);float:left;line-height:.85;margin:4px 10px 0 0}
+
+/* POLICY */
+.policy-list{list-style:none;display:flex;flex-direction:column;gap:2px}
+.policy-item{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-radius:8px;transition:background .2s;cursor:default}
+.policy-item:hover{background:var(--pc-dim)}
+.policy-num{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--pc);background:var(--pc-dim);border:1px solid var(--pc-glow);border-radius:4px;padding:2px 7px;flex-shrink:0;margin-top:1px}
+.policy-text{font-size:14px;line-height:1.6;color:#1a1a1a;font-weight:500}
+
+/* CTA CARD */
+.cta-card{background:var(--ink);border-radius:var(--radius);padding:32px 28px;margin-bottom:24px;position:sticky;top:76px;overflow:hidden;border:1px solid rgba(255,255,255,.06);box-shadow:0 20px 60px rgba(0,0,0,.25);opacity:0;animation:fadeUp .5s .15s forwards}
+.cta-card::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,var(--pc-glow) 0%,transparent 70%);pointer-events:none}
+.cta-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.25);border-radius:99px;padding:4px 12px;margin-bottom:16px}
+.cta-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;line-height:1.2;color:white;margin-bottom:8px}
+.cta-sub{font-size:13px;color:rgba(255,255,255,.45);margin-bottom:24px;line-height:1.6}
+.cta-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px 20px;background:var(--red);color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border-radius:8px;text-decoration:none;transition:all .25s;box-shadow:0 0 30px rgba(200,16,46,.5);position:relative;overflow:hidden}
+.cta-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(to right,transparent 0%,rgba(255,255,255,.12) 50%,transparent 100%);transform:translateX(-100%);transition:transform .5s}
+.cta-btn:hover{background:#e01535;transform:translateY(-2px);box-shadow:0 4px 40px rgba(200,16,46,.7)}
+.cta-btn:hover::after{transform:translateX(100%)}
+.cta-divider{height:1px;background:rgba(255,255,255,.07);margin:24px 0}
+.cta-cnt-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px}
+.cta-cnt-wrap{display:flex;align-items:center;gap:10px}
+.cta-cnt-num{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:white;line-height:1}
+.cta-cnt-sub{font-size:12px;color:rgba(255,255,255,.35);line-height:1.4}
+
+/* DETAILS */
+.details-card{opacity:0;animation:fadeUp .5s .3s forwards}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--border);gap:16px}
+.detail-row:last-child{border-bottom:none}
+.detail-key{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);flex-shrink:0;padding-top:1px;min-width:90px}
+.detail-val{font-size:13px;font-weight:500;color:var(--ink);text-align:right;line-height:1.5}
+.detail-party-pill{display:inline-flex;align-items:center;padding:3px 12px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--pc);color:white}
+
+/* card stagger */
+.card:nth-child(1){animation-delay:.1s}
+.card:nth-child(2){animation-delay:.2s}
+
+/* BACK STRIP */
+.back-strip{position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(13,13,13,.95);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;gap:20px;border-top:1px solid rgba(255,255,255,.06);z-index:100}
+.back-link{font-size:12px;font-weight:600;letter-spacing:.06em;color:rgba(255,255,255,.5);text-decoration:none;transition:color .2s;display:flex;align-items:center;gap:6px}
+.back-link:hover{color:white}
+.back-sep{color:rgba(255,255,255,.15)}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loader-flag"></div>
+  <div class="loader-text">Loading Profile</div>
+</div>
+
+<div id="error-state">
+  <span style="font-size:32px">⚠️</span>
+  <p>Could not load candidate profile.</p>
+  <a href="/candidates/" style="color:var(--green);font-weight:600;text-decoration:none">← All Candidates</a>
+</div>
+
+<div id="profile-page" style="display:none">
+
+  <nav class="nav">
+    <a href="/" class="nav-brand">
+      <div class="nav-brand-flag"></div>
+      Bangladesh Election 2026
+    </a>
+    <div class="nav-actions">
+      <a href="/candidates/" class="nav-link nl-ghost">← Candidates</a>
+      <a href="/results/"    class="nav-link nl-ghost">📊 Results</a>
+      <a href="/login/"      class="nav-link nl-vote">🗳 Vote</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-geo" id="hero-geo"></div>
+    <div id="hero-cover-bg" class="hero-cover-bg"></div>
+    <div class="hero-vignette"></div>
+    <div class="hero-ring"></div>
+    <div class="hero-accent"></div>
+    <div class="hero-content">
+      <div class="hero-label">2026 General Election · Candidate Profile</div>
+      <div class="hero-av-name">
+        <div id="hero-avatar-wrap"></div>
+        <div>
+          <h1 class="hero-name" id="hero-name">—</h1>
+          <div class="hero-badges" id="hero-badges"></div>
+        </div>
+      </div>
+      <div class="hero-slogan" id="hero-slogan" style="display:none">
+        <div class="hero-slogan-inner">
+          <span class="hero-slogan-q">"</span>
+          <p class="hero-slogan-text" id="hero-slogan-text"></p>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <div class="hero-scroll-line"></div>
+      <div class="hero-scroll-dot"></div>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon" id="bio-icon">👤</div>
+          <div class="card-title">About This Candidate</div>
+        </div>
+        <p class="bio-text" id="bio-text">No biography provided.</p>
+      </div>
+      <div class="card" id="policy-card" style="display:none">
+        <div class="card-header">
+          <div class="card-icon">📋</div>
+          <div class="card-title">Key Policy Points</div>
+        </div>
+        <ul class="policy-list" id="policy-list"></ul>
+      </div>
+    </div>
+    <div>
+      <div class="cta-card">
+        <div class="cta-badge">Cast Your Vote</div>
+        <div class="cta-title" id="cta-title">Support This Candidate</div>
+        <div class="cta-sub">Log in with your Voter ID to cast your official ballot in the 2026 General Election.</div>
+        <a href="/login/" class="cta-btn"><span>🗳</span><span>Vote Now</span></a>
+        <div class="cta-divider"></div>
+        <div class="cta-cnt-label">Current Votes</div>
+        <div class="cta-cnt-wrap">
+          <div class="cta-cnt-num" id="cta-cnt">0</div>
+          <div class="cta-cnt-sub">votes cast<br>in this constituency</div>
+        </div>
+      </div>
+      <div class="card details-card">
+        <div class="card-header">
+          <div class="card-icon">📄</div>
+          <div class="card-title">Candidate Details</div>
+        </div>
+        <div id="details-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="back-strip">
+    <a href="/candidates/" class="back-link">← All Candidates</a>
+    <span class="back-sep">·</span>
+    <a href="/results/" class="back-link">📊 Results</a>
+    <span class="back-sep">·</span>
+    <a href="/login/" class="back-link">🗳 Vote</a>
+  </div>
+
+</div>
+
+<script>
+const PARTY_COLORS = {
+  BNP:       {color:'#1a3a6b',dim:'rgba(26,58,107,0.10)',  glow:'rgba(26,58,107,0.28)'},
+  NCP:       {color:'#006a4e',dim:'rgba(0,106,78,0.10)',   glow:'rgba(0,106,78,0.28)'},
+  Daripalla: {color:'#6d28d9',dim:'rgba(109,40,217,0.10)', glow:'rgba(109,40,217,0.28)'},
+};
+function theme(party){ return PARTY_COLORS[party]||{color:'#374151',dim:'rgba(55,65,81,0.10)',glow:'rgba(55,65,81,0.28)'}; }
+function applyTheme(party){
+  const t=theme(party), r=document.documentElement;
+  r.style.setProperty('--pc',t.color);
+  r.style.setProperty('--pc-dim',t.dim);
+  r.style.setProperty('--pc-glow',t.glow);
+  document.getElementById('hero-cover-bg').style.backgroundColor=t.color; // party fallback color
+}
+
+const parts=window.location.pathname.replace(/\/$/,'').split('/');
+const CID=parseInt(parts[parts.length-1],10);
+
+function animCount(el,target){
+  let n=0; const step=Math.max(1,Math.floor(target/40));
+  const t=setInterval(()=>{ n=Math.min(n+step,target); el.textContent=n.toLocaleString(); if(n>=target)clearInterval(t); },30);
+}
+
+function render(c){
+  applyTheme(c.party);
+  document.title=`${c.name} — Bangladesh Election 2026`;
+
+  const coverBg=document.getElementById('hero-cover-bg');
+  if(c.cover_photo_url){
+    const isLogo = c.cover_photo_url.includes('.png') || c.cover_photo_url.includes('seeklogo');
+    if(isLogo) coverBg.classList.add('logo-mode');
+    const tmp=new Image();
+    tmp.onload=()=>{ coverBg.style.backgroundImage=`url('${c.cover_photo_url}')`; coverBg.classList.add('loaded'); };
+    tmp.onerror=()=>{ coverBg.style.backgroundImage=`url('${c.cover_photo_url}')`; coverBg.classList.add('loaded'); };
+    tmp.src=c.cover_photo_url;
+  }
+
+  const aw=document.getElementById('hero-avatar-wrap');
+  if(c.photo_url){
+    const img=document.createElement('img'); img.src=c.photo_url; img.className='hero-avatar'; img.alt=c.name; aw.appendChild(img);
+  } else {
+    const d=document.createElement('div'); d.className='hero-avatar-letter'; d.textContent=c.name.charAt(0).toUpperCase(); aw.appendChild(d);
+  }
+
+  document.getElementById('hero-name').textContent=c.name;
+  document.getElementById('hero-badges').innerHTML=`
+    <span class="hb hb-party">${c.party}</span>
+    <span class="hb hb-region">📍 ${c.region||'—'}</span>
+    <span class="hb hb-votes">🗳 ${(c.vote_count??0).toLocaleString()} votes</span>`;
+
+  if(c.slogan){
+    document.getElementById('hero-slogan').style.display='block';
+    document.getElementById('hero-slogan-text').textContent=c.slogan;
+  }
+
+  if(c.bio&&c.bio.trim()) document.getElementById('bio-text').textContent=c.bio;
+
+  if(c.manifesto&&c.manifesto.trim()){
+    const lines=c.manifesto.split('\n').map(l=>l.trim()).filter(Boolean);
+    if(lines.length){
+      document.getElementById('policy-list').innerHTML=lines.map((l,i)=>
+        `<li class="policy-item"><span class="policy-num">${String(i+1).padStart(2,'0')}</span><span class="policy-text">${l}</span></li>`
+      ).join('');
+      document.getElementById('policy-card').style.display='block';
+    }
+  }
+
+  document.getElementById('cta-title').textContent=`Vote for ${c.name}`;
+  animCount(document.getElementById('cta-cnt'), c.vote_count??0);
+
+  const rows=[];
+  if(c.age)       rows.push(['Age',`${c.age} years old`,false]);
+  if(c.occupation)rows.push(['Occupation',c.occupation,false]);
+  if(c.party)     rows.push(['Party',c.party,true]);
+  if(c.region)    rows.push(['Region',c.region,false]);
+  document.getElementById('details-grid').innerHTML=rows.map(([k,v,pill])=>`
+    <div class="detail-row">
+      <span class="detail-key">${k}</span>
+      ${pill?`<span class="detail-val"><span class="detail-party-pill">${v}</span></span>`:`<span class="detail-val">${v}</span>`}
+    </div>`).join('');
+
+  const loader=document.getElementById('loading');
+  loader.classList.add('hidden');
+  setTimeout(()=>loader.style.display='none',500);
+  document.getElementById('profile-page').style.display='block';
+}
+
+async function load(){
+  try{
+    const res=await fetch(`/api/candidates/${CID}/`);
+    if(!res.ok) throw new Error();
+    render(await res.json());
+  } catch {
+    document.getElementById('loading').style.display='none';
+    document.getElementById('error-state').style.display='flex';
+  }
+}
+load();
+</script>
+</body>
+</html>

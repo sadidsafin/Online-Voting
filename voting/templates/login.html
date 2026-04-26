@@ -1,71 +1,445 @@
-{% extends "base.html" %}
-{% block title %}Voter Login{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voter Login — Bangladesh Election 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--red:#c8102e;--green:#006a4e;--gold:#d4a843;--cream:#f5f0e8;--ink:#1a1209;--muted:#6b5e4e;--surface:#ffffff;--border:#ddd5c8;--error:#b91c1c;--error-bg:#fef2f2;--success:#065f46;--success-bg:#ecfdf5;--warn:#92400e;--warn-bg:#fffbeb;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Barlow',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;background:#0d2b1f;}
+.ballot-scene{position:fixed;inset:0;z-index:0;}
+.paper{position:absolute;background:white;border-radius:2px;opacity:0;animation:paperFall linear infinite;box-shadow:0 2px 8px rgba(0,0,0,.25);}
+.paper::before{content:'';display:block;margin:7px 5px 0;height:2px;background:#ccc;border-radius:1px;box-shadow:0 5px 0 #e5e5e5,0 10px 0 #ddd,0 15px 0 #e8e8e8;}
+.paper:nth-child(1){left:4%;width:28px;height:36px;animation-duration:6.0s;animation-delay:0.0s;}
+.paper:nth-child(2){left:11%;width:34px;height:44px;animation-duration:7.5s;animation-delay:1.2s;}
+.paper:nth-child(3){left:20%;width:26px;height:34px;animation-duration:5.5s;animation-delay:0.5s;}
+.paper:nth-child(4){left:31%;width:36px;height:46px;animation-duration:8.0s;animation-delay:2.1s;}
+.paper:nth-child(5){left:42%;width:30px;height:40px;animation-duration:6.5s;animation-delay:0.8s;}
+.paper:nth-child(6){left:53%;width:32px;height:42px;animation-duration:7.2s;animation-delay:1.6s;}
+.paper:nth-child(7){left:63%;width:28px;height:36px;animation-duration:5.8s;animation-delay:3.0s;}
+.paper:nth-child(8){left:73%;width:34px;height:44px;animation-duration:8.5s;animation-delay:0.3s;}
+.paper:nth-child(9){left:82%;width:26px;height:34px;animation-duration:6.2s;animation-delay:1.9s;}
+.paper:nth-child(10){left:91%;width:30px;height:38px;animation-duration:7.0s;animation-delay:2.7s;}
+.paper:nth-child(11){left:7%;width:22px;height:30px;animation-duration:9.0s;animation-delay:4.1s;}
+.paper:nth-child(12){left:47%;width:24px;height:32px;animation-duration:6.8s;animation-delay:3.5s;}
+@keyframes paperFall{0%{top:-60px;opacity:0;transform:rotate(-6deg) scale(.9);}8%{opacity:.55;}90%{opacity:.35;}100%{top:110vh;opacity:0;transform:rotate(12deg) scale(1.05);}}
+.bbox-wrap{position:fixed;bottom:-10px;left:50%;transform:translateX(-50%);z-index:2;pointer-events:none;width:280px;}
+.bbox-wrap svg{width:100%;height:auto;display:block;}
+.insert-paper{animation:insertPaper 3s ease-in-out infinite;transform-origin:50% 0;}
+@keyframes insertPaper{0%{transform:translateY(-100px) rotate(-4deg);opacity:0;}12%{opacity:1;}55%{transform:translateY(2px) rotate(0);opacity:1;}70%{transform:translateY(16px) rotate(0);opacity:.7;}100%{transform:translateY(16px);opacity:0;}}
+.scene-overlay{position:fixed;inset:0;background:linear-gradient(160deg,rgba(13,43,31,.78) 0%,rgba(13,43,31,.55) 50%,rgba(13,43,31,.85) 100%);z-index:3;}
+.top-bar{position:fixed;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--green),var(--red),var(--green));z-index:10;}
+/* Steps */
+.steps-row{display:flex;align-items:flex-start;justify-content:center;margin-bottom:22px;}
+.step-col{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid var(--border);color:var(--muted);background:white;transition:all .3s;}
+.step-dot.active{border-color:var(--green);color:var(--green);}
+.step-dot.done{border-color:var(--green);background:var(--green);color:white;}
+.step-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);transition:color .3s;}
+.step-label.active{color:var(--green);}
+.step-line-col{display:flex;align-items:flex-start;padding-top:13px;}
+.step-line{width:44px;height:2px;background:var(--border);transition:background .4s;}
+.step-line.done{background:var(--green);}
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:36px 36px 32px;width:100%;max-width:400px;box-shadow:0 4px 6px rgba(0,0,0,.1),0 20px 60px rgba(0,0,0,.45);position:relative;z-index:6;animation:cardIn .5s ease both .15s;}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.flag-icon{font-size:40px;text-align:center;display:block;margin-bottom:14px;animation:pop .5s cubic-bezier(.34,1.56,.64,1) both .25s;}
+@keyframes pop{from{opacity:0;transform:scale(.5);}to{opacity:1;transform:scale(1);}}
+.org{text-align:center;font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:4px;}
+h1{font-family:'Libre Baskerville',serif;font-size:21px;color:var(--ink);text-align:center;margin-bottom:4px;}
+.sub{text-align:center;font-size:12px;color:var(--muted);margin-bottom:22px;line-height:1.5;}
+.rule{height:1px;background:var(--border);margin:18px 0;}
+/* Voter card */
+.voter-card{background:var(--success-bg);border:1px solid #a7f3d0;border-radius:3px;padding:12px 14px;margin-bottom:14px;animation:slideDown .3s ease;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.voter-card-label{display:flex;align-items:center;gap:6px;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--success);margin-bottom:8px;}
+.voter-card-label::before{content:'✓';width:16px;height:16px;border-radius:50%;background:var(--success);color:white;font-size:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.voter-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.meta-item{background:white;border-radius:2px;padding:7px 10px;}
+.meta-item .mk{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.meta-item .mv{font-size:12px;font-weight:600;color:var(--ink);margin-top:2px;}
+/* OTP boxes */
+.otp-wrapper{display:flex;gap:10px;justify-content:center;margin:10px 0;}
+.otp-box{width:46px;height:54px;text-align:center;font-size:22px;font-weight:700;font-family:'Barlow',sans-serif;color:var(--ink);background:var(--cream);border:2px solid var(--border);border-radius:3px;outline:none;transition:border-color .2s,box-shadow .2s;caret-color:transparent;}
+.otp-box:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,106,78,.12);background:white;}
+.otp-box.filled{border-color:var(--green);background:white;}
+.otp-box.err{border-color:var(--error);box-shadow:0 0 0 3px rgba(185,28,28,.08);}
+.otp-box.shake{animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-4px);}80%{transform:translateX(4px);}}
+/* Inputs */
+label{display:block;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);margin-bottom:7px;}
+.input-wrap{position:relative;}
+input[type="number"]{width:100%;padding:12px 14px 12px 40px;font-family:'Barlow',sans-serif;font-size:18px;font-weight:600;letter-spacing:.05em;color:var(--ink);background:var(--cream);border:1.5px solid var(--border);border-radius:2px;outline:none;transition:border-color .2s,box-shadow .2s;-moz-appearance:textfield;}
+input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{-webkit-appearance:none;}
+input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,106,78,.1);background:white;}
+input.err{border-color:var(--error);box-shadow:0 0 0 3px rgba(185,28,28,.08);}
+input.ok{border-color:var(--green);background:white;}
+.icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+.field-hint{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4;}
+/* Phone badge */
+.phone-badge{display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:2px;padding:6px 10px;margin-bottom:10px;font-size:12px;font-weight:600;color:var(--success);letter-spacing:.04em;}
+/* Alerts */
+.alert{display:none;margin-top:8px;padding:9px 12px;border-radius:2px;font-size:12px;font-weight:500;line-height:1.4;}
+.alert.err{display:block;background:var(--error-bg);color:var(--error);border:1px solid #fecaca;}
+.alert.warn{display:block;background:var(--warn-bg);color:var(--warn);border:1px solid #fde68a;}
+.alert.ok{display:block;background:var(--success-bg);color:var(--success);border:1px solid #a7f3d0;}
+/* Buttons */
+.btn-primary{width:100%;margin-top:18px;padding:14px;background:var(--red);color:white;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border:none;border-radius:2px;cursor:pointer;transition:background .2s,transform .1s,box-shadow .2s;position:relative;overflow:hidden;}
+.btn-primary:hover{background:#a50d25;box-shadow:0 4px 20px rgba(200,16,46,.3);}
+.btn-primary:active{transform:scale(.99);}
+.btn-primary:disabled{opacity:.6;pointer-events:none;}
+.btn-primary.loading::after{content:'';position:absolute;left:0;top:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);animation:shimmer 1s infinite;}
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.btn-link{background:none;border:none;padding:0;cursor:pointer;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--green);text-decoration:underline;transition:color .2s;}
+.btn-link:hover{color:#004d38;}
+.btn-link:disabled{color:var(--muted);pointer-events:none;text-decoration:none;}
+.resend-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;font-size:11px;color:var(--muted);}
+#countdown{font-weight:600;color:var(--green);}
+.attempts-bar{display:flex;gap:4px;justify-content:center;margin-bottom:10px;}
+.attempt-pip{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .3s;}
+.attempt-pip.used{background:var(--error);}
+#panel-otp{display:none;animation:fadeIn .35s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.note{margin-top:14px;font-size:10px;color:var(--muted);text-align:center;line-height:1.6;}
+.scene-label{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:7;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.3);white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="ballot-scene">
+  <div class="paper"></div><div class="paper"></div><div class="paper"></div>
+  <div class="paper"></div><div class="paper"></div><div class="paper"></div>
+  <div class="paper"></div><div class="paper"></div><div class="paper"></div>
+  <div class="paper"></div><div class="paper"></div><div class="paper"></div>
+  <div class="bbox-wrap">
+    <svg viewBox="0 0 280 230" xmlns="http://www.w3.org/2000/svg">
+      <g class="insert-paper">
+        <rect x="112" y="48" width="56" height="72" rx="3" fill="white" opacity=".96"/>
+        <rect x="120" y="58" width="40" height="3" rx="1.5" fill="#ccc"/>
+        <rect x="120" y="65" width="32" height="3" rx="1.5" fill="#e0e0e0"/>
+        <rect x="120" y="72" width="36" height="3" rx="1.5" fill="#ccc"/>
+        <rect x="120" y="79" width="28" height="3" rx="1.5" fill="#e0e0e0"/>
+        <circle cx="140" cy="99" r="8" fill="none" stroke="#006a4e" stroke-width="2"/>
+        <polyline points="135,99 139,103 146,93" fill="none" stroke="#006a4e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <rect x="44" y="130" width="192" height="94" rx="6" fill="#15342a"/>
+      <rect x="44" y="130" width="192" height="94" rx="6" fill="none" stroke="#1f5040" stroke-width="1.5"/>
+      <rect x="56" y="140" width="168" height="74" rx="4" fill="#122d24" opacity=".6"/>
+      <rect x="108" y="124" width="64" height="13" rx="6.5" fill="#0a1f17"/>
+      <rect x="108" y="124" width="64" height="13" rx="6.5" fill="none" stroke="#1f5040" stroke-width="1.5"/>
+      <rect x="112" y="127" width="56" height="6" rx="3" fill="#061410"/>
+      <text x="140" y="176" text-anchor="middle" font-family="Georgia,serif" font-size="10" font-weight="bold" fill="#d4a843" letter-spacing="4">BALLOT</text>
+      <text x="140" y="188" text-anchor="middle" font-family="sans-serif" font-size="7" fill="rgba(255,255,255,.35)" letter-spacing="2">OFFICIAL VOTING BOX</text>
+      <rect x="130" y="196" width="20" height="13" rx="2.5" fill="#1f5040"/>
+      <path d="M133 196 Q133 189 140 189 Q147 189 147 196" fill="none" stroke="#1f5040" stroke-width="2.5"/>
+      <circle cx="140" cy="202" r="2" fill="#d4a843"/>
+      <rect x="64" y="222" width="14" height="8" rx="2" fill="#0f2820"/>
+      <rect x="202" y="222" width="14" height="8" rx="2" fill="#0f2820"/>
+      <rect x="44" y="130" width="5" height="94" rx="2.5" fill="#006a4e" opacity=".8"/>
+      <rect x="231" y="130" width="5" height="94" rx="2.5" fill="#c8102e" opacity=".6"/>
+    </svg>
+  </div>
+</div>
+<div class="scene-overlay"></div>
+<div class="top-bar"></div>
 
-{% block content %}
 <div class="card">
-    <h1>Voter Verification</h1>
-    <p class="subtitle">Enter your Voter ID to access the ballot.</p>
+  <span class="flag-icon">🇧🇩</span>
+  <p class="org">Bangladesh General Election 2026</p>
+  <h1>Voter Login</h1>
+  <p class="sub">Two-step verification to access<br>the ballot for your constituency.</p>
 
-    <div id="error-msg" class="alert alert-error hidden"></div>
+  <div class="steps-row">
+    <div class="step-col">
+      <div class="step-dot active" id="dot-1">1</div>
+      <div class="step-label active" id="lbl-1">ID</div>
+    </div>
+    <div class="step-line-col"><div class="step-line" id="line-1"></div></div>
+    <div class="step-col">
+      <div class="step-dot" id="dot-2">2</div>
+      <div class="step-label" id="lbl-2">OTP</div>
+    </div>
+    <div class="step-line-col"><div class="step-line" id="line-2"></div></div>
+    <div class="step-col">
+      <div class="step-dot" id="dot-3">3</div>
+      <div class="step-label" id="lbl-3">Vote</div>
+    </div>
+  </div>
 
-    <div>
-        <label for="voter-id">Voter ID</label>
-        <input type="number" id="voter-id" placeholder="e.g. 1001" min="1" />
-        <button class="btn btn-primary" onclick="verifyVoter()">Verify &amp; Continue →</button>
+  <!-- STEP 1 -->
+  <div id="panel-id">
+    <label for="vid">Voter ID Number</label>
+    <div class="input-wrap">
+      <span class="icon">🪪</span>
+      <input type="number" id="vid" placeholder="e.g. 1001" min="1" autocomplete="off"/>
+    </div>
+    <p class="field-hint" id="hint-id"></p>
+    <div class="alert" id="alert-id"></div>
+    <button class="btn-primary" id="btn-id" onclick="verifyId()">Verify ID →</button>
+    <p class="note">Each Voter ID may only be used once.<br>Having trouble? Contact your polling officer.</p>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="panel-otp">
+    <div class="voter-card">
+      <div class="voter-card-label">Voter verified</div>
+      <div class="voter-meta">
+        <div class="meta-item"><div class="mk">Voter ID</div><div class="mv" id="info-id">—</div></div>
+        <div class="meta-item"><div class="mk">Region</div><div class="mv" id="info-region">—</div></div>
+        <div class="meta-item"><div class="mk">Phone</div><div class="mv" id="info-phone">—</div></div>
+      </div>
+    </div>
+    <div class="rule"></div>
+    <label>Enter 6-digit OTP</label>
+
+    <!-- Shown for voter 1100 (real SMS) -->
+    <div class="phone-badge" id="badge-sms" style="display:none;">📱 OTP sent to <span id="badge-phone" style="margin-left:4px;">—</span></div>
+
+    <!-- Shown for all other voters (auto-generated) -->
+    <div id="badge-auto" style="display:none;background:#f0fdf4;border:1.5px solid #22c55e;border-radius:7px;padding:10px 14px;margin:8px 0 4px;text-align:center;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#15803d;margin-bottom:4px;">Your OTP (Demo Mode)</div>
+      <div id="auto-otp-display" style="font-size:28px;font-weight:800;letter-spacing:.25em;color:#166534;font-family:'Barlow',monospace;">——————</div>
+      <div style="font-size:9px;color:#15803d;margin-top:3px;">Auto-filled below &middot; Valid for 5 minutes</div>
     </div>
 
-    <p style="margin-top:24px; font-size:13px; color:#a0aec0; text-align:center;">
-        This is a simulated voting environment for demonstration purposes.
-    </p>
+    <div class="attempts-bar">
+      <div class="attempt-pip" id="pip-1"></div>
+      <div class="attempt-pip" id="pip-2"></div>
+      <div class="attempt-pip" id="pip-3"></div>
+    </div>
+    <div class="otp-wrapper">
+      <input class="otp-box" id="o1" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="o2" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="o3" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="o4" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="o5" maxlength="1" inputmode="numeric" pattern="[0-9]">
+      <input class="otp-box" id="o6" maxlength="1" inputmode="numeric" pattern="[0-9]">
+    </div>
+    <div class="alert" id="alert-otp"></div>
+    <button class="btn-primary" id="btn-otp" onclick="verifyOtp()">Confirm &amp; Access Ballot &rarr;</button>
+    <div class="resend-row">
+      <span>Didn't receive the code?</span>
+      <span>
+        <button class="btn-link" id="btn-resend" onclick="resendOtp()" disabled>Resend</button>
+        <span id="countdown">&nbsp;0:30</span>
+      </span>
+    </div>
+    <button class="btn-link" style="display:block;margin-top:14px;font-size:10px;color:var(--muted);text-decoration:none;text-transform:none;letter-spacing:0;" onclick="goBack()">← Use a different Voter ID</button>
+  </div>
 </div>
+<p class="scene-label">Secure · Confidential · Official</p>
 
 <script>
-function showError(msg) {
-    const el = document.getElementById('error-msg');
-    el.textContent = msg;
-    el.classList.remove('hidden');
-}
+// Wipe any stale session immediately
+sessionStorage.clear();
 
-function hideError() {
-    document.getElementById('error-msg').classList.add('hidden');
-}
+const API = '';   // empty = same origin (Django serves this page)
+let verifiedVoterId = null, verifiedRegion = null, maskedPhone = null;
+let otpExpiry = null, attemptsLeft = 3, countdownTimer = null;
+let currentOtpMode = 'auto';   // 'auto' | 'sms'
 
-async function verifyVoter() {
-    hideError();
-    const voterId = document.getElementById('voter-id').value.trim();
+const panelId  = document.getElementById('panel-id');
+const panelOtp = document.getElementById('panel-otp');
+const vidInput = document.getElementById('vid');
+const alertId  = document.getElementById('alert-id');
+const alertOtp = document.getElementById('alert-otp');
+const hintId   = document.getElementById('hint-id');
+const otpBoxes = [1,2,3,4,5,6].map(i => document.getElementById('o'+i));
 
-    if (!voterId) {
-        showError('Please enter your Voter ID.');
-        return;
-    }
-
-    try {
-        const res = await fetch(`/api/verify-voter/?voter_id=${voterId}`);
-        const data = await res.json();
-
-        if (data.error) {
-            showError(data.error);
-            return;
-        }
-
-        if (data.has_voted) {
-            showError('This Voter ID has already cast a vote.');
-            return;
-        }
-
-        // Store voter info in sessionStorage and redirect to voting page
-        sessionStorage.setItem('voter_id', voterId);
-        sessionStorage.setItem('voter_region', data.region);
-        window.location.href = '/vote/';
-
-    } catch (err) {
-        showError('Something went wrong. Please try again.');
-    }
-}
-
-// Allow Enter key to submit
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') verifyVoter();
+vidInput.focus();
+vidInput.addEventListener('keydown', e => { if (e.key==='Enter') verifyId(); });
+vidInput.addEventListener('input', () => {
+  const v = vidInput.value.trim();
+  clearAlert(alertId); vidInput.classList.remove('err','ok');
+  if (!v) { hintId.textContent=''; return; }
+  if (!/^\d+$/.test(v)||parseInt(v)<1) {
+    hintId.textContent='⚠ Voter IDs are positive whole numbers.';
+    hintId.style.color='var(--error)'; vidInput.classList.add('err');
+  } else { hintId.textContent=''; vidInput.classList.add('ok'); }
 });
+
+async function verifyId() {
+  clearAlert(alertId);
+  const id = vidInput.value.trim();
+  if (!id) { showAlert(alertId,'err','Please enter your Voter ID.'); return; }
+  if (!/^\d+$/.test(id)||parseInt(id)<1) { showAlert(alertId,'err','Voter ID must be a positive whole number.'); vidInput.classList.add('err'); return; }
+  const btn = document.getElementById('btn-id');
+  setLoading(btn,true,'Verifying…');
+  try {
+    const res  = await fetch(`${API}/api/verify-voter/?voter_id=${id}`);
+    const data = await res.json();
+    if (data.error)     { showAlert(alertId,'err', data.error); vidInput.classList.add('err'); return; }
+    if (data.has_voted) { showAlert(alertId,'warn','⚠ This Voter ID has already cast a vote. Contact your polling officer if this is an error.'); vidInput.classList.add('err'); return; }
+    if (!data.has_phone){ showAlert(alertId,'err','No phone number is registered for this Voter ID. Please contact your polling officer.'); vidInput.classList.add('err'); return; }
+    verifiedVoterId = id; verifiedRegion = data.region; maskedPhone = data.masked_phone;
+    await sendOtp();
+  } catch(e) {
+    showAlert(alertId,'err','Cannot reach server. Please try again.');
+  } finally { setLoading(btn,false,'Verify ID →'); }
+}
+
+async function sendOtp() {
+  const res  = await fetch(`${API}/api/request-otp/`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({voter_id: parseInt(verifiedVoterId)})
+  });
+  const data = await res.json();
+  if (data.error) { showAlert(alertId,'err', data.error); throw new Error(data.error); }
+  otpExpiry = Date.now() + 5*60*1000;
+  attemptsLeft = 3; updatePips();
+
+  if (data.mode === 'auto' && data.otp_code) {
+    // Auto-generated OTP — show it in the green banner and auto-fill boxes
+    currentOtpMode = 'auto';
+    document.getElementById('badge-sms').style.display  = 'none';
+    document.getElementById('badge-auto').style.display = 'block';
+    document.getElementById('auto-otp-display').textContent = data.otp_code;
+    // Auto-fill the 6 boxes
+    data.otp_code.split('').forEach((ch, i) => {
+      otpBoxes[i].value = ch;
+      otpBoxes[i].classList.add('filled');
+    });
+  } else {
+    // Voter 1100 — real SMS sent
+    currentOtpMode = 'sms';
+    document.getElementById('badge-sms').style.display  = 'block';
+    document.getElementById('badge-auto').style.display = 'none';
+    document.getElementById('badge-phone').textContent  = maskedPhone || '—';
+    otpBoxes.forEach(b => { b.value = ''; b.classList.remove('filled'); });
+  }
+
+  transitionToOtp();
+}
+
+function transitionToOtp() {
+  document.getElementById('info-id').textContent     = verifiedVoterId;
+  document.getElementById('info-region').textContent = verifiedRegion;
+  document.getElementById('info-phone').textContent  =
+    currentOtpMode === 'sms' ? (maskedPhone || '—') : 'Auto OTP (Demo)';
+  panelId.style.display='none'; panelOtp.style.display='block';
+  document.getElementById('dot-1').classList.replace('active','done');
+  document.getElementById('dot-1').textContent='✓';
+  document.getElementById('line-1').classList.add('done');
+  document.getElementById('dot-2').classList.add('active');
+  document.getElementById('lbl-2').classList.add('active');
+  startCountdown(30);
+  // For SMS mode focus first box; for auto mode focus confirm button
+  if (currentOtpMode === 'sms') { otpBoxes[0].focus(); }
+  else { document.getElementById('btn-otp').focus(); }
+}
+
+otpBoxes.forEach((box,idx) => {
+  box.addEventListener('input', e => {
+    box.value = e.target.value.replace(/\D/g,'').slice(-1);
+    box.classList.toggle('filled',!!box.value);
+    clearOtpErrors();
+    if (box.value && idx<5) otpBoxes[idx+1].focus();
+    if (getOtp().length===6) verifyOtp();
+  });
+  box.addEventListener('keydown', e => {
+    if (e.key==='Backspace'&&!box.value&&idx>0){ otpBoxes[idx-1].value=''; otpBoxes[idx-1].classList.remove('filled'); otpBoxes[idx-1].focus(); }
+    if (e.key==='ArrowLeft'&&idx>0)  otpBoxes[idx-1].focus();
+    if (e.key==='ArrowRight'&&idx<5) otpBoxes[idx+1].focus();
+  });
+  box.addEventListener('paste', e => {
+    e.preventDefault();
+    const text=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');
+    text.split('').slice(0,6).forEach((ch,i)=>{ if(otpBoxes[i]){otpBoxes[i].value=ch;otpBoxes[i].classList.add('filled');} });
+    const nx=otpBoxes.findIndex(b=>!b.value); (nx!==-1?otpBoxes[nx]:otpBoxes[5]).focus();
+    if (getOtp().length===6) setTimeout(verifyOtp,100);
+  });
+});
+function getOtp(){ return otpBoxes.map(b=>b.value).join(''); }
+
+async function verifyOtp() {
+  clearAlert(alertOtp);
+  const entered = getOtp();
+  if (entered.length<6) { showAlert(alertOtp,'err','Please enter all 6 digits of your OTP.'); return; }
+  if (Date.now()>otpExpiry) { showAlert(alertOtp,'warn','⚠ Your OTP has expired. Please request a new one.'); return; }
+  const btn = document.getElementById('btn-otp');
+  setLoading(btn,true,'Confirming…');
+  try {
+    const res  = await fetch(`${API}/api/verify-otp/`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({voter_id:parseInt(verifiedVoterId), otp:entered})
+    });
+    const data = await res.json();
+    if (data.valid) {
+      document.getElementById('dot-2').classList.replace('active','done');
+      document.getElementById('dot-2').textContent='✓';
+      document.getElementById('line-2').classList.add('done');
+      document.getElementById('dot-3').classList.add('active');
+      document.getElementById('lbl-3').classList.add('active');
+      if (countdownTimer) clearInterval(countdownTimer);
+      sessionStorage.setItem('voter_id',     verifiedVoterId);
+      sessionStorage.setItem('voter_region', verifiedRegion);
+      btn.textContent='✓ Access granted — redirecting…';
+      setTimeout(()=>{ window.location.href='/vote/'; }, 900);
+    } else {
+      attemptsLeft--; updatePips(); shakeBoxes();
+      if (attemptsLeft<=0) {
+        showAlert(alertOtp,'err','3 incorrect attempts. Please request a new OTP.');
+        otpBoxes.forEach(b=>b.disabled=true); btn.disabled=true;
+      } else {
+        showAlert(alertOtp,'err', data.error || `Incorrect code. ${attemptsLeft} attempt${attemptsLeft>1?'s':''} remaining.`);
+        otpBoxes.forEach(b=>{b.value='';b.classList.remove('filled');}); otpBoxes[0].focus();
+      }
+    }
+  } catch(e) {
+    showAlert(alertOtp,'err','Cannot reach server. Please try again.');
+  } finally {
+    if (btn.textContent!=='✓ Access granted — redirecting…') setLoading(btn,false,'Confirm & Access Ballot →');
+  }
+}
+
+async function resendOtp() {
+  clearAlert(alertOtp);
+  otpBoxes.forEach(b=>{b.value='';b.classList.remove('filled','err');b.disabled=false;});
+  document.getElementById('auto-otp-display').textContent = '——————';
+  document.getElementById('badge-auto').style.display = 'none';
+  document.getElementById('btn-otp').disabled=false;
+  document.getElementById('btn-resend').disabled=true;
+  try {
+    await sendOtp();
+    startCountdown(30);
+    showAlert(alertOtp,'ok',
+      currentOtpMode === 'sms'
+        ? 'A new OTP has been sent to your registered number.'
+        : 'A new OTP has been generated and auto-filled above.');
+  } catch(e) {
+    document.getElementById('btn-resend').disabled=false;
+  }
+}
+
+function startCountdown(secs) {
+  if (countdownTimer) clearInterval(countdownTimer);
+  const resendBtn=document.getElementById('btn-resend'), countEl=document.getElementById('countdown');
+  resendBtn.disabled=true; let rem=secs;
+  countEl.textContent=` 0:${String(rem).padStart(2,'0')}`;
+  countdownTimer=setInterval(()=>{
+    rem--;
+    if(rem<=0){clearInterval(countdownTimer);countEl.textContent='';resendBtn.disabled=false;}
+    else countEl.textContent=` 0:${String(rem).padStart(2,'0')}`;
+  },1000);
+}
+
+function goBack() {
+  if (countdownTimer) clearInterval(countdownTimer);
+  panelOtp.style.display='none'; panelId.style.display='block';
+  document.getElementById('dot-1').className='step-dot active'; document.getElementById('dot-1').textContent='1';
+  document.getElementById('lbl-1').className='step-label active';
+  document.getElementById('line-1').classList.remove('done');
+  document.getElementById('dot-2').className='step-dot'; document.getElementById('lbl-2').className='step-label';
+  clearAlert(alertId); vidInput.value=''; vidInput.classList.remove('err','ok'); hintId.textContent=''; vidInput.focus();
+}
+
+function showAlert(el,type,msg){el.textContent=msg;el.className=`alert ${type}`;}
+function clearAlert(el){el.className='alert';}
+function clearOtpErrors(){otpBoxes.forEach(b=>b.classList.remove('err'));clearAlert(alertOtp);}
+function shakeBoxes(){otpBoxes.forEach(b=>b.classList.add('err','shake'));setTimeout(()=>otpBoxes.forEach(b=>b.classList.remove('shake')),450);}
+function setLoading(btn,on,text){btn.disabled=on;btn.classList.toggle('loading',on);btn.textContent=text;}
+function updatePips(){[1,2,3].forEach(i=>document.getElementById(`pip-${i}`).classList.toggle('used',i>attemptsLeft));}
 </script>
-{% endblock %}
+</body>
+</html>
