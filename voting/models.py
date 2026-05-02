@@ -81,6 +81,7 @@ class VoteAuditLog(models.Model):
                             (> FRAUD_THRESHOLD triggers a flag)
     flagged                 True if this vote was considered suspicious
     flag_reason             Comma-separated list of triggered rule names
+    
     """
 
     voter = models.OneToOneField(
@@ -97,6 +98,7 @@ class VoteAuditLog(models.Model):
     flagged                = models.BooleanField(default=False)
     flag_reason            = models.TextField(blank=True, default='')
     created_at             = models.DateTimeField(auto_now_add=True)
+    device_type            = models.CharField(max_length=50, default='unknown')
 
     class Meta:
         ordering = ['-created_at']

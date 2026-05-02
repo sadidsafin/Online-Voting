@@ -397,6 +397,7 @@ def cast_vote(request):
             risk_score             = risk_score,
             flagged                = flagged,
             flag_reason            = flag_reason,
+            device_type            = features.get('device_type', 'unknown'),
         ),
     )
 
